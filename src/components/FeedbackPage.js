@@ -1,15 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getBusiness } from "../services/api";
-import { Card, Checkbox, Flex, Form, Input, Radio, Rate } from "antd";
 import {
-  FireFilled,
-  HeartFilled,
-  HeartOutlined,
-  StarFilled,
-} from "@ant-design/icons";
+  Button,
+  Card,
+  Checkbox,
+  Flex,
+  Form,
+  Input,
+  Radio,
+  Rate,
+  Typography,
+  Row,
+  Col,
+  Space,
+} from "antd";
+
+import { sliderDesigns } from "../common.ts";
 function FeedbackPage() {
+  const [activityType, setActivityType] = useState("");
+  const [interestedInOWC, setInterestedInOWC] = useState(false);
+  const [experience, setExperience] = useState(0);
   const { payload } = useParams();
   console.log("payload", payload);
 
@@ -44,69 +56,126 @@ function FeedbackPage() {
     },
     // }
   });
+const handleSubmit = (values) => {
+    values.overAllExperience = experience;
+    console.log("Form Values:", values);
+    // console.log("Form experience:", experience);
+    // Here you can handle the form submission, e.g., send data to an API
+  };
 
   return (
     <>
-      <Form
-        labelCol={{ span: 4 }}
-        wrapperCol={{ span: 14 }}
-        layout="horizontal"
-        size="default"
-        style={{ maxWidth: 600 }}
-      >
-        <Card style={{ width: 300 }}>
-          <p>{data.businessName}</p>
-          <p>{data.tagLine}</p>
-          <Form.Item name="email">
-            <Input placeholder="Email" />
-          </Form.Item>
-          <Form.Item name="phoneNo">
-            <Input placeholder="Phone Number" />
-          </Form.Item>
-          <Form.Item name="Activity Type">
-            <Flex vertical gap="middle">
-              <Radio.Group
-                block
-                optionType="button"
-                buttonStyle="solid"
-                size="small"
-              >
-                <Radio block value="dsd">
-                  {" "}
-                  DSD{" "}
-                </Radio>
-                <Radio block value="course">
-                  {" "}
-                  Course{" "}
-                </Radio>
-                <Radio block value="fundive">
-                  {" "}
-                  Fundive{" "}
-                </Radio>
-              </Radio.Group>
-            </Flex>
-          </Form.Item>
-          <Form.Item name="intrestedInOWC">
-            <Checkbox>Intrested in OWC</Checkbox>
-          </Form.Item>
-          <Form.Item name="knownSwimming">
-            <Checkbox>Known Swimming</Checkbox>
-          </Form.Item>
-          <Form.Item name="overAllExperience">
-            <Flex vertical gap="middle">
-              <Rate character={<FireFilled style={{ color: "orange" }} />} />
-              <Rate character={<StarFilled />} />
-              <Rate
-                character={<HeartFilled style={{ accentColor: "red" }} />}
-              />
-            </Flex>
-          </Form.Item>
-
-          <p>Card content</p>
-          <p>Card content</p>
-        </Card>
-      </Form>
-      {isLoading ? <h1>Loading...</h1> : <h5>{JSON.stringify(data)}</h5>}
+      <Row style={{ marginTop: "20px" }}>
+        <Col span={2} />
+        <Col span={20}>
+          <Form
+            // labelCol={{ span: 4 }}
+            // wrapperCol={{ span: 14 }}
+            layout="horizontal"
+            size="default"
+            style={{ width: "100%" }}
+            onFinish={handleSubmit}
+            
+        
+          >
+            <Card loading={isLoading} size="small" hoverable={true}>
+              <div style={{ textAlign: "center", marginBottom: 10 }}>
+                <Typography.Title level={4} style={{ marginBottom: 4 }}>
+                  {data?.businessName}
+                </Typography.Title>
+                <Typography.Paragraph type="secondary" style={{ margin: 0 }}>
+                  {data?.tagLine}
+                </Typography.Paragraph>
+              </div>
+              <Form.Item name="email">
+                <Input size="small" placeholder="Email" />
+              </Form.Item>
+              <Form.Item name="phoneNo">
+                <Input size="small" placeholder="Phone Number" />
+              </Form.Item>
+              <Form.Item name="Activity Type">
+                <Flex vertical gap="middle">
+                  <Radio.Group
+                    block
+                    optionType="button"
+                    buttonStyle="solid"
+                    size="small"
+                    onChange={(e) => {
+                      setActivityType(e.target.value);
+                      setInterestedInOWC(false); // reset if type changes
+                    }}
+                    value={activityType}
+                  >
+                    <Radio block value="dsd">
+                      {" "}
+                      DSD{" "}
+                    </Radio>
+                    <Radio block value="course">
+                      {" "}
+                      Course{" "}
+                    </Radio>
+                    <Radio block value="fundive">
+                      {" "}
+                      Fundive{" "}
+                    </Radio>
+                  </Radio.Group>
+                </Flex>
+              </Form.Item>
+              {activityType === "dsd" && (
+                <Form.Item name="intrestedInOWC" valuePropName="checked">
+                  <Checkbox
+                  valuePropName="checked"
+                    checked={interestedInOWC}
+                    onChange={(e) => setInterestedInOWC(e.target.checked)}
+                  >
+                    Intrested in OWC
+                  </Checkbox>
+                </Form.Item>
+              )}
+              {interestedInOWC && (
+                <Form.Item valuePropName="checked" name="knownSwimming" >
+                  <Checkbox >Known Swimming</Checkbox>
+                </Form.Item>
+              )}
+              <Form.Item name="overAllExperience" valuePropName="checked" >
+                <Typography.Text> Overall Experience </Typography.Text>
+                <Rate
+                valuePropName="checked" 
+                  value={experience}
+                  onChange={setExperience}
+                  character={({ index }) => {
+                    const { Icon, color } =
+                      sliderDesigns[data?.sliderDesign] || sliderDesigns.star; // fallback
+                    const filled = index < (experience || 0);
+                    return (
+                      <Icon style={{ color: filled ? color : "#d9d9d9" }} />
+                    );
+                  }}
+                ></Rate>
+              </Form.Item>
+              <Form.Item name="comments">
+                <Input.TextArea
+                  placeholder="Feedback Comments"
+                  autoSize={{ minRows: 2, maxRows: 6 }}
+                />
+              </Form.Item>
+              <Form.Item >
+                <div style={{ textAlign: "center", marginBottom: 16 }}>
+                  <Button
+                    style={{ alignContent: "center" }}
+                    placeholder="submit"
+                    type="primary"
+                    htmlType="submit"
+                  >
+                    Submit Feedback
+                  </Button>
+                </div>
+              </Form.Item>
+            </Card>
+          </Form>
+        </Col>
+        <Col span={2} />
+      </Row>
     </>
   );
 }
